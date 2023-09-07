@@ -1,0 +1,16 @@
+{
+  "extends": "./node_modules/@sourcegraph/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "module": "commonjs",
+    "target": "ES2015",
+    "allowSyntheticDefaultImports": true,
+    "strictPropertyInitialization": false,
+    "lib": ["dom", "es2015", "es2017", "dom.iterable"],
+    "baseUrl": "src"
+  },
+  "include": ["./src/**/*"]
+}

@@ -159,10 +159,10 @@ export type TelemetryEventParameters<EventMetadataKeyT extends string> = {
    */
   metadata?: [[EventMetadataKeyT, number]];
   /**
-   * privateMetadata is an object with arbitrary keys and values. This
-   * is NOT exported by default, as it may contain private instance data.
+   * privateMetadata is an arbitrary value. This is NOT exported by default, as
+   * it may contain private instance data.
    */
-  privateMetadata?: { [key: string]: string };
+  privateMetadata?: any;
   /**
    * billingMetadata carries additional metadata how this event relates to
    * product billing.

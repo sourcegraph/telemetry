@@ -19,14 +19,20 @@ import { TelemetryEventInput } from "api";
  */
 export interface TelemetryRecorder<
   EventNameT extends string,
-  EventMetadataKeyT extends string
+  EventMetadataKeyT extends string,
+  BillingProductsT extends string,
+  BillingCategoriesT extends string
 > {
   /**
    * Record an event.
    */
   recordEvent(
     name: EventNameT,
-    parameters?: TelemetryEventParameters<EventMetadataKeyT>
+    parameters?: TelemetryEventParameters<
+      EventMetadataKeyT,
+      BillingProductsT,
+      BillingCategoriesT
+    >
   ): void;
 }
 
@@ -78,7 +84,9 @@ export type TelemetrySource = {
  */
 export class TelemetryRecorderProvider<
   EventNameT extends string,
-  EventMetadataKeyT extends string
+  EventMetadataKeyT extends string,
+  BillingProductsT extends string,
+  BillingCategoriesT extends string
 > {
   private submitter: TelemetrySubmitter;
 
@@ -101,7 +109,12 @@ export class TelemetryRecorderProvider<
    */
   getRecorder(
     additionalProcessors?: TelemetryProcessor[]
-  ): TelemetryRecorder<EventNameT, EventMetadataKeyT> {
+  ): TelemetryRecorder<
+    EventNameT,
+    EventMetadataKeyT,
+    BillingProductsT,
+    BillingCategoriesT
+  > {
     return new EventRecorder(
       this.source,
       this.submitter,
@@ -142,7 +155,11 @@ export namespace Event {
  *
  * EventMetadataKeyT should be an enum string that defines keys for event metadata.
  */
-export type TelemetryEventParameters<EventMetadataKeyT extends string> = {
+export type TelemetryEventParameters<
+  EventMetadataKeyT extends string,
+  BillingProductsT extends string,
+  BillingCategoriesT extends string
+> = {
   /**
    * version should indicate the version of the shape of this particular
    * event.
@@ -162,7 +179,7 @@ export type TelemetryEventParameters<EventMetadataKeyT extends string> = {
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
    * it may contain private instance data.
    */
-  privateMetadata?: any;
+  privateMetadata?: { [key: string]: any };
   /**
    * billingMetadata carries additional metadata how this event relates to
    * product billing.
@@ -171,12 +188,12 @@ export type TelemetryEventParameters<EventMetadataKeyT extends string> = {
     /**
      * Billing product ID associated with the event.
      */
-    product: number;
+    product: BillingProductsT;
 
     /**
      * Billing category ID the event falls into.
      */
-    category: number;
+    category: BillingCategoriesT;
   };
 };
 
@@ -263,8 +280,19 @@ class BatchSubmitter implements TelemetrySubmitter {
  * applies processors and then submits events to the underlying EventSubmitter
  * for export.
  */
-class EventRecorder<EventNameT extends string, EventMetadataKeyT extends string>
-  implements TelemetryRecorder<EventNameT, EventMetadataKeyT> {
+class EventRecorder<
+  EventNameT extends string,
+  EventMetadataKeyT extends string,
+  BillingProductsT extends string,
+  BillingCategoriesT extends string
+>
+  implements
+    TelemetryRecorder<
+      EventNameT,
+      EventMetadataKeyT,
+      BillingProductsT,
+      BillingCategoriesT
+    > {
   constructor(
     private source: TelemetrySource,
     private submitter: TelemetrySubmitter,
@@ -276,7 +304,11 @@ class EventRecorder<EventNameT extends string, EventMetadataKeyT extends string>
    */
   recordEvent(
     name: EventNameT,
-    parameters?: TelemetryEventParameters<EventMetadataKeyT>
+    parameters?: TelemetryEventParameters<
+      EventMetadataKeyT,
+      BillingProductsT,
+      BillingCategoriesT
+    >
   ): void {
     let apiEvent = this.makeAPIEvent(name, parameters);
     for (const processor of this.processors) {
@@ -290,7 +322,11 @@ class EventRecorder<EventNameT extends string, EventMetadataKeyT extends string>
    */
   private makeAPIEvent(
     name: EventNameT,
-    parameters?: TelemetryEventParameters<EventMetadataKeyT>
+    parameters?: TelemetryEventParameters<
+      EventMetadataKeyT,
+      BillingProductsT,
+      BillingCategoriesT
+    >
   ): TelemetryEventInput {
     return {
       name: name,

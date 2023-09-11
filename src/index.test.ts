@@ -26,10 +26,18 @@ enum MetadataKey {
   Foo = "Foo",
 }
 
+enum BillingProducts {
+  A = "A"
+}
+
+enum BillingCategories { 
+  B = "B"
+}
+
 describe("EventRecorderProvider", () => {
   test("should buffer events", async () => {
     const exporter = new TestTelemetryExporter();
-    const provider = new TelemetryRecorderProvider<EventName, MetadataKey>(
+    const provider = new TelemetryRecorderProvider<EventName, MetadataKey, BillingProducts, BillingCategories>(
       telemetrySource,
       exporter,
       undefined, // no processors
@@ -65,7 +73,7 @@ describe("EventRecorderProvider", () => {
 
   test("can disable buffering of events", () => {
     const exporter = new TestTelemetryExporter();
-    const provider = new TelemetryRecorderProvider<EventName, MetadataKey>(
+    const provider = new TelemetryRecorderProvider<EventName, MetadataKey, BillingProducts, BillingCategories>(
       telemetrySource,
       exporter,
       undefined, // no processors
@@ -89,11 +97,11 @@ describe("EventRecorderProvider", () => {
   test("should process events", () => {
     const exporter = new TestTelemetryExporter();
     const billingMetadata = {
-      category: 3,
-      product: 12,
+      category: "3",
+      product: "12",
     };
     const processed: TelemetryEventInput[] = [];
-    const provider = new TelemetryRecorderProvider<EventName, MetadataKey>(
+    const provider = new TelemetryRecorderProvider<EventName, MetadataKey, BillingProducts, BillingCategories>(
       telemetrySource,
       exporter,
       [
@@ -124,8 +132,8 @@ describe("EventRecorderProvider", () => {
 
     // Record with custom billing metadata
     const customBillingMetadata = {
-      category: 12,
-      product: 100,
+      category: BillingCategories.B,
+      product: BillingProducts.A,
     };
     recorder.recordEvent(EventName.FooBar, {
       version: 0,

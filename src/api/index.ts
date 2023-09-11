@@ -113,12 +113,12 @@ export type TelemetryEventBillingMetadataInput = {
   /**
    Billing product ID associated with the event.
    */
-  product: number;
+  product: string;
 
   /**
    Billing category ID the event falls into.
    */
-  category: number;
+  category: string;
 };
 
 /**

@@ -73,10 +73,11 @@ export type TelemetryEventParametersInput = {
   metadata?: TelemetryEventMetadataInput[];
 
   /**
-   * Private metadata in JSON format. All keys and values must be strings.
-   * By default, this metadata is assumed to be unsafe for export from an instance.
+   * Private metadata in JSON object format with string keys.
+   * By default, this metadata is assumed to be unsafe for export from an
+   * instance.
    */
-  privateMetadata?: { [key: string]: string };
+  privateMetadata?: string;
 
   /**
    * Billing-related metadata.

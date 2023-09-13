@@ -14,12 +14,13 @@ import { TelemetryEventInput } from "api";
  * individual EventRecorder instances. Only implementations provided by this
  * package should be used.
  *
- * EventNameT should be an enum string that defines possible event names.
- * EventMetadataKeyT should be an enum string that defines keys for event metadata.
+ * Generic arguments must be enum strings that defines allowed values for each
+ * type.
  */
 export interface TelemetryRecorder<
-  EventNameT extends string,
-  EventMetadataKeyT extends string,
+  FeatureT extends string,
+  ActionT extends string,
+  MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
 > {
@@ -27,9 +28,10 @@ export interface TelemetryRecorder<
    * Record an event.
    */
   recordEvent(
-    name: EventNameT,
+    feature: FeatureT,
+    action: ActionT,
     parameters?: TelemetryEventParameters<
-      EventMetadataKeyT,
+      MetadataKeyT,
       BillingProductsT,
       BillingCategoriesT
     >
@@ -83,8 +85,9 @@ export type TelemetrySource = {
  * exporter. Additional processors can be stacked on top as well.
  */
 export class TelemetryRecorderProvider<
-  EventNameT extends string,
-  EventMetadataKeyT extends string,
+  FeatureT extends string,
+  ActionT extends string,
+  MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
 > {
@@ -110,8 +113,9 @@ export class TelemetryRecorderProvider<
   getRecorder(
     additionalProcessors?: TelemetryProcessor[]
   ): TelemetryRecorder<
-    EventNameT,
-    EventMetadataKeyT,
+    FeatureT,
+    ActionT,
+    MetadataKeyT,
     BillingProductsT,
     BillingCategoriesT
   > {
@@ -134,29 +138,12 @@ export class TelemetryRecorderProvider<
 }
 
 /**
- * This namespace extends EventNameT with some event name modifier conventions
- * that we support. This is the only place where values should be cast to
- * EventNameT in your codebase.
- */
-export namespace Event {
-  /**
-   * View prefixes eventName with a modifier for indicating a page view event.
-   * The format is `View${eventName}`
-   */
-  export function View<EventNameT extends string>(
-    eventName: EventNameT
-  ): EventNameT {
-    return `View${eventName}` as EventNameT;
-  }
-}
-
-/**
  * TelemetryEventParameters describes additional, optional parameters for recording events.
  *
- * EventMetadataKeyT should be an enum string that defines keys for event metadata.
+ * MetadataKeyT should be an enum string that defines keys for event metadata.
  */
 export type TelemetryEventParameters<
-  EventMetadataKeyT extends string,
+  MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
 > = {
@@ -174,7 +161,7 @@ export type TelemetryEventParameters<
    * so this is the easiest way to enforce that keys belong to statically
    * defined enums.
    */
-  metadata?: [[EventMetadataKeyT, number]];
+  metadata?: [[MetadataKeyT, number]];
   /**
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
    * it may contain private instance data.
@@ -281,15 +268,17 @@ class BatchSubmitter implements TelemetrySubmitter {
  * for export.
  */
 class EventRecorder<
-  EventNameT extends string,
-  EventMetadataKeyT extends string,
+  FeatureT extends string,
+  ActionT extends string,
+  MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
 >
   implements
     TelemetryRecorder<
-      EventNameT,
-      EventMetadataKeyT,
+      FeatureT,
+      ActionT,
+      MetadataKeyT,
       BillingProductsT,
       BillingCategoriesT
     > {
@@ -303,14 +292,15 @@ class EventRecorder<
    * Record an event.
    */
   recordEvent(
-    name: EventNameT,
+    feature: FeatureT,
+    action: ActionT,
     parameters?: TelemetryEventParameters<
-      EventMetadataKeyT,
+      MetadataKeyT,
       BillingProductsT,
       BillingCategoriesT
     >
   ): void {
-    let apiEvent = this.makeAPIEvent(name, parameters);
+    let apiEvent = this.makeAPIEvent(`${feature}:${action}`, parameters);
     for (const processor of this.processors) {
       processor.processEvent(apiEvent);
     }
@@ -321,9 +311,9 @@ class EventRecorder<
    * Converts an event record into an Telemetry API event.
    */
   private makeAPIEvent(
-    name: EventNameT,
+    name: string,
     parameters?: TelemetryEventParameters<
-      EventMetadataKeyT,
+      MetadataKeyT,
       BillingProductsT,
       BillingCategoriesT
     >

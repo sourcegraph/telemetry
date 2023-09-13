@@ -15,9 +15,14 @@
  */
 export type TelemetryEventInput = {
   /**
-   * Name of the event.
+   * Feature associated with the event in camelCase, e.g. 'myFeature'.
    */
-  name: string;
+  feature: string;
+
+  /**
+   * Action associated with the event in camelCase, e.g. 'pageView'.
+   */
+  action: string;
 
   /**
    * Information about where this event came from.

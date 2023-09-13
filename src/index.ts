@@ -300,7 +300,7 @@ class EventRecorder<
       BillingCategoriesT
     >
   ): void {
-    let apiEvent = this.makeAPIEvent(`${feature}:${action}`, parameters);
+    let apiEvent = this.makeAPIEvent(feature, action, parameters);
     for (const processor of this.processors) {
       processor.processEvent(apiEvent);
     }
@@ -311,7 +311,8 @@ class EventRecorder<
    * Converts an event record into an Telemetry API event.
    */
   private makeAPIEvent(
-    name: string,
+    feature: string,
+    action: string,
     parameters?: TelemetryEventParameters<
       MetadataKeyT,
       BillingProductsT,
@@ -319,7 +320,8 @@ class EventRecorder<
     >
   ): TelemetryEventInput {
     return {
-      name: name,
+      feature,
+      action,
       source: this.source,
       parameters: parameters
         ? {

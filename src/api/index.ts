@@ -35,11 +35,6 @@ export type TelemetryEventInput = {
   parameters: TelemetryEventParametersInput;
 
   /**
-   * Optional user associated with the event.
-   */
-  user?: TelemetryEventUserInput;
-
-  /**
    * Optional marketing campaign tracking parameters.
    */
   marketingTracking?: TelemetryEventMarketingTrackingInput;

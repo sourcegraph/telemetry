@@ -1,0 +1,14 @@
+"""
+Represents a null return value.
+"""
+type EmptyResponse {
+  """
+  A dummy null value.
+  """
+  alwaysNil: String
+}
+
+"""
+A valid JSON value.
+"""
+scalar JSONValue

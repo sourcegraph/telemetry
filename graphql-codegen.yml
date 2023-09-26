@@ -1,0 +1,9 @@
+overwrite: true
+schema:
+  - "./schema/shared.graphql"
+  - "./schema/telemetry.graphql"
+documents: null
+generates:
+  src/api/index.ts:
+    plugins:
+      - "typescript"

@@ -7,3 +7,7 @@ Sourcegraph Telemetry V2
 ```sh
 npm test
 ```
+
+## Updating schemas
+
+See [./schema/README.md](./schema/README.md).

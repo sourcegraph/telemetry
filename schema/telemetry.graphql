@@ -1,42 +1,22 @@
 """
-Represents a null return value.
-"""
-type EmptyResponse {
-  """
-  A dummy null value.
-  """
-  alwaysNil: String
-}
-
-"""
-A valid JSON value.
-"""
-scalar JSONValue
-
-"""
-
-"""
-Mutations for recording events from clients.
-"""
-type TelemetryMutation {
-  """
-  Record a single telemetry event.
-  """
-  recordEvent(event: TelemetryEventInput!): EmptyResponse
-  """
-  Record a batch of telemetry events.
-  """
-  recordEvents(events: [TelemetryEventInput!]!): EmptyResponse
-}
-
-"""
 Properties comprising a telemetry V2 event that can be reported by a client.
 """
 input TelemetryEventInput {
   """
-  Name of the event.
+  Feature associated with the event in camelCase, e.g. 'myFeature'.
+
+  Feature names must come from a static set of values in libraries - it is
+  left as a string in the API to allow some flexibility.
   """
-  name: String!
+  feature: String!
+
+  """
+  Action associated with the event in camelCase, e.g. 'pageView'.
+
+  Action names must come from a static set of values in libraries - it is
+  left as a string in the API to allow some flexibility.
+  """
+  action: String!
 
   """
   Information about where this event came from.
@@ -47,11 +27,6 @@ input TelemetryEventInput {
   Parameters of the event.
   """
   parameters: TelemetryEventParametersInput!
-
-  """
-  Optional user associated with the event.
-  """
-  user: TelemetryEventUserInput
 
   """
   Optional marketing campaign tracking parameters.
@@ -85,11 +60,13 @@ input TelemetryEventParametersInput {
   """
   version: Int!
   """
-  Strictly typed metadata.
+  Strictly typed metadata that must not contain any sensitive data or PII.
   """
   metadata: [TelemetryEventMetadataInput!]
   """
-  Private metadata in JSON format. All keys and values must be strings.
+  Private metadata in JSON format. Unlike metadata, values can be of any type,
+  not just numeric.
+
   By default, this metadata is assumed to be unsafe for export from an instance.
   """
   privateMetadata: JSONValue
@@ -115,36 +92,29 @@ input TelemetryEventMetadataInput {
 }
 
 """
-User associated with a telemetry V2 event.
-"""
-input TelemetryEventUserInput {
-  """
-  Database user ID of signed in user.
-  """
-  userID: Int
-  """
-  Randomized unique identifier for client (i.e. stored in localstorage in web
-  client).
-  """
-  anonymousUserID: String
-}
-
-"""
 Billing-related metadata for a telemetry event.
 """
 input TelemetryEventBillingMetadataInput {
   """
   Billing product ID associated with the event.
+
+  IDs must come from a static set of values in libraries - it is left as a
+  string in the API to allow some flexibility.
   """
-  product: Int
+  product: String!
   """
   Billing category ID the event falls into.
+
+  IDs must come from a static set of values in libraries - it is left as a
+  string in the API to allow some flexibility.
   """
-  category: Int
+  category: String!
 }
 
 """
 Marketing campaign tracking parameters for a telemetry V2 event.
+
+By default, this metadata is assumed to be unsafe for export from an instance.
 """
 input TelemetryEventMarketingTrackingInput {
   """

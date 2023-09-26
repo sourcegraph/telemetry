@@ -39,10 +39,12 @@ enum BillingCategories {
   B = "B"
 }
 
+class ExampleTelemetryProvider extends TelemetryRecorderProvider<Feature, Action, MetadataKey, BillingProducts, BillingCategories> {}
+
 describe("EventRecorderProvider", () => {
   test("should buffer events", async () => {
     const exporter = new TestTelemetryExporter();
-    const provider = new TelemetryRecorderProvider<Feature, Action, MetadataKey, BillingProducts, BillingCategories>(
+    const provider = new ExampleTelemetryProvider(
       telemetrySource,
       exporter,
       undefined, // no processors

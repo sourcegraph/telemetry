@@ -47,7 +47,7 @@ export interface TelemetryRecorder<
 
 type TelemetryRecordingOptions = {
   /**
-   * Time to buffer events for, in ms. Set to 0 to disable buffering.
+   * Time to buffer events for, in ms. Set to 0 to disable buffering (default).
    */
   bufferTimeMs: number;
   /**
@@ -61,7 +61,7 @@ type TelemetryRecordingOptions = {
 };
 
 export const defaultEventRecordingOptions: TelemetryRecordingOptions = {
-  bufferTimeMs: 500,
+  bufferTimeMs: 0,
   bufferMaxSize: 10,
   errorHandler: (error) => {
     console.error("@sourcegraph/telemetry:", error);

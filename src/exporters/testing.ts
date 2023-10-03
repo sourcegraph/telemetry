@@ -1,5 +1,5 @@
+import { TelemetryExporter } from ".";
 import { TelemetryEventInput } from "../api";
-import { TelemetryExporter } from "../exporters";
 
 /**
  * TestTelemetryExporter does nothing with exported events but record them

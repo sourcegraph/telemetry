@@ -3,6 +3,7 @@ import { TelemetryEventInput } from "../api";
 /**
  * Export everything from folder index.
  */
+export * from "./console";
 export * from "./testing";
 
 /**

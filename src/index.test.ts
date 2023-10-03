@@ -2,12 +2,11 @@ import {
   defaultEventRecordingOptions,
   TelemetryRecorderProvider,
   TelemetrySource,
+  TelemetryEventInput,
+  TestTelemetryExporter,
+  CallbackTelemetryProcessor,
+  BillingMetadataTelemetryProcessor,
 } from ".";
-
-import { TelemetryEventInput } from "./api";
-import { TestTelemetryExporter } from "./exporters/testing";
-import { CallbackTelemetryProcessor } from "./processors/callback";
-import { BillingMetadataTelemetryProcessor } from "./processors/billing";
 
 const telemetrySource: TelemetrySource = { client: "test" };
 
@@ -32,14 +31,20 @@ enum MetadataKey {
 }
 
 enum BillingProducts {
-  A = "A"
+  A = "A",
 }
 
-enum BillingCategories { 
-  B = "B"
+enum BillingCategories {
+  B = "B",
 }
 
-class ExampleTelemetryProvider extends TelemetryRecorderProvider<Feature, Action, MetadataKey, BillingProducts, BillingCategories> {}
+class ExampleTelemetryProvider extends TelemetryRecorderProvider<
+  Feature,
+  Action,
+  MetadataKey,
+  BillingProducts,
+  BillingCategories
+> {}
 
 describe("EventRecorderProvider", () => {
   test("should buffer events", async () => {
@@ -80,7 +85,13 @@ describe("EventRecorderProvider", () => {
 
   test("can disable buffering of events", () => {
     const exporter = new TestTelemetryExporter();
-    const provider = new TelemetryRecorderProvider<Feature, Action, MetadataKey, BillingProducts, BillingCategories>(
+    const provider = new TelemetryRecorderProvider<
+      Feature,
+      Action,
+      MetadataKey,
+      BillingProducts,
+      BillingCategories
+    >(
       telemetrySource,
       exporter,
       undefined, // no processors
@@ -94,7 +105,7 @@ describe("EventRecorderProvider", () => {
     // Records should be immediately available
     recorder.recordEvent(Feature.FooBar, Action.View);
     expect(exporter.getExported().length).toBe(1);
-    recorder.recordEvent(Feature.BarBaz,  Action.Error, {
+    recorder.recordEvent(Feature.BarBaz, Action.Error, {
       version: 0,
       metadata: [[MetadataKey.Foo, 12]],
     });
@@ -108,7 +119,13 @@ describe("EventRecorderProvider", () => {
       product: "12",
     };
     const processed: TelemetryEventInput[] = [];
-    const provider = new TelemetryRecorderProvider<Feature, Action, MetadataKey, BillingProducts, BillingCategories>(
+    const provider = new TelemetryRecorderProvider<
+      Feature,
+      Action,
+      MetadataKey,
+      BillingProducts,
+      BillingCategories
+    >(
       telemetrySource,
       exporter,
       [
@@ -125,7 +142,7 @@ describe("EventRecorderProvider", () => {
     const recorder = provider.getRecorder();
 
     recorder.recordEvent(Feature.FooBar, Action.View);
-    recorder.recordEvent(Feature.BarBaz,  Action.Error, {
+    recorder.recordEvent(Feature.BarBaz, Action.Error, {
       version: 0,
       metadata: [[MetadataKey.Foo, 12]],
     });
@@ -146,6 +163,8 @@ describe("EventRecorderProvider", () => {
       version: 0,
       billingMetadata: customBillingMetadata,
     });
-    expect(exporter.getExported().pop()?.parameters.billingMetadata).toEqual(customBillingMetadata);
+    expect(exporter.getExported().pop()?.parameters.billingMetadata).toEqual(
+      customBillingMetadata
+    );
   });
 });

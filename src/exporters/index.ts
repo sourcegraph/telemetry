@@ -1,6 +1,11 @@
 import { TelemetryEventInput } from "api";
 
 /**
+ * Export everything from folder index.
+ */
+export * from "./testing";
+
+/**
  * TelemetryExporter implementations should export events in batches to the
  * connected Sourcegraph instance.
  */

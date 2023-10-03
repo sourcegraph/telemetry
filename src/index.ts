@@ -6,6 +6,13 @@ import { TelemetryProcessor } from "processors";
 import { TelemetryEventInput } from "api";
 
 /**
+ * Make everything available from the top level.
+ */
+export * from "exporters";
+export * from "processors";
+export * from "api";
+
+/**
  * EventRecorder is the contract Sourcegraph clients to record events for
  * forwarding to Sourcegraph via Telemetry V2. It exposes parameters that are
  * expected to be provided at call sites.
@@ -273,15 +280,15 @@ class EventRecorder<
   MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
->
-  implements
+> implements
     TelemetryRecorder<
       FeatureT,
       ActionT,
       MetadataKeyT,
       BillingProductsT,
       BillingCategoriesT
-    > {
+    >
+{
   constructor(
     private source: TelemetrySource,
     private submitter: TelemetrySubmitter,

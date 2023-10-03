@@ -1,5 +1,8 @@
-import { TelemetryProcessor } from "processors";
-import { TelemetryEventInput, TelemetryEventBillingMetadataInput } from "api";
+import { TelemetryProcessor } from "../processors";
+import {
+  TelemetryEventInput,
+  TelemetryEventBillingMetadataInput,
+} from "../api";
 
 /**
  * BillingMetadataTelemetryProcessor injects billing metadata from to all telemetry

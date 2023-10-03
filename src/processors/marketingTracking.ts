@@ -1,5 +1,8 @@
-import { TelemetryProcessor } from "processors";
-import { TelemetryEventInput, TelemetryEventMarketingTrackingInput } from "api";
+import { TelemetryProcessor } from "../processors";
+import {
+  TelemetryEventInput,
+  TelemetryEventMarketingTrackingInput,
+} from "../api";
 
 /**
  * MarketingTrackingProvider can be implemented to generate platform-specific

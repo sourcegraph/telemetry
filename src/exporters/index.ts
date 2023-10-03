@@ -1,4 +1,4 @@
-import { TelemetryEventInput } from "api";
+import { TelemetryEventInput } from "../api";
 
 /**
  * Export everything from folder index.

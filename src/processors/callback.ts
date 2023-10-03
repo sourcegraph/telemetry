@@ -1,5 +1,5 @@
-import { TelemetryProcessor } from "processors";
-import { TelemetryEventInput } from "api";
+import { TelemetryProcessor } from "../processors";
+import { TelemetryEventInput } from "../api";
 
 /**
  * CallbackTelemetryProcessor runs callback on all telemetry events. The

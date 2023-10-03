@@ -1,16 +1,16 @@
 import { EMPTY, Subject } from "rxjs";
 import { bufferTime, catchError, concatMap, takeUntil } from "rxjs/operators";
 
-import { TelemetryExporter } from "exporters";
-import { TelemetryProcessor } from "processors";
-import { TelemetryEventInput } from "api";
+import { TelemetryExporter } from "./exporters";
+import { TelemetryProcessor } from "./processors";
+import { TelemetryEventInput } from "./api";
 
 /**
  * Make everything available from the top level.
  */
-export * from "exporters";
-export * from "processors";
-export * from "api";
+export * from "./exporters";
+export * from "./processors";
+export * from "./api";
 
 /**
  * EventRecorder is the contract Sourcegraph clients to record events for

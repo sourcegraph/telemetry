@@ -338,9 +338,7 @@ class EventRecorder<
                   return { key: pair[0], value: pair[1] };
                 })
               : undefined,
-            privateMetadata: parameters.privateMetadata
-              ? JSON.stringify(parameters.privateMetadata)
-              : undefined,
+            privateMetadata: parameters.privateMetadata,
             billingMetadata: parameters.billingMetadata,
           }
         : {

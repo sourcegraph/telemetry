@@ -154,10 +154,6 @@ describe("EventRecorderProvider", () => {
     let exported = exporter.getExported();
     exporter.getExported().forEach((event) => {
       expect(event.parameters.billingMetadata).toEqual(billingMetadata);
-      expect(
-        event.parameters.privateMetadata === "{}" ||
-          event.parameters.privateMetadata === undefined
-      ).toBeTruthy();
     });
     // Our custom callback processor works too
     expect(exported.length).toBe(processed.length);

@@ -158,7 +158,7 @@ export type TelemetryEventParameters<
    * version should indicate the version of the shape of this particular
    * event.
    */
-  version: number;
+  version?: number;
   /**
    * metadata is array of tuples with predefined keys and arbitrary
    * numeric value. This data is always exported alongside events to

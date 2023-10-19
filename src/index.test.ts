@@ -63,7 +63,6 @@ describe("EventRecorderProvider", () => {
 
     recorder.recordEvent(Feature.FooBar, Action.View);
     recorder.recordEvent(Feature.BarBaz, Action.Error, {
-      version: 0,
       metadata: [[MetadataKey.Foo, 12]],
     });
 

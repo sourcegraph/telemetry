@@ -28,6 +28,7 @@ enum Action {
  */
 enum MetadataKey {
   Foo = "Foo",
+  Baz = "Baz",
 }
 
 enum BillingProducts {
@@ -63,7 +64,10 @@ describe("EventRecorderProvider", () => {
 
     recorder.recordEvent(Feature.FooBar, Action.View);
     recorder.recordEvent(Feature.BarBaz, Action.Error, {
-      metadata: [[MetadataKey.Foo, 12]],
+      metadata: [
+        [MetadataKey.Foo, 12],
+        [MetadataKey.Baz, 13],
+      ],
     });
 
     // Is buffered

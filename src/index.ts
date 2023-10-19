@@ -168,7 +168,7 @@ export type TelemetryEventParameters<
    * so this is the easiest way to enforce that keys belong to statically
    * defined enums.
    */
-  metadata?: [[MetadataKeyT, number]];
+  metadata?: [MetadataKeyT, number][];
   /**
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
    * it may contain private instance data.

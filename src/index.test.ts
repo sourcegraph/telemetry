@@ -10,26 +10,14 @@ import {
 
 const telemetrySource: TelemetrySource = { client: "test" };
 
-/**
- * Example enum type to use as ExampleEventName
- */
-enum Feature {
-  FooBar = "FooBar",
-  BarBaz = "BarBaz",
-}
+type Feature = "fooBar" | "barBaz";
 
 enum Action {
-  View = "View",
-  Error = "Error",
+  View = "view",
+  Error = "error",
 }
 
-/**
- * Example enum type to use as EventMetadataKeyT
- */
-enum MetadataKey {
-  Foo = "Foo",
-  Baz = "Baz",
-}
+type MetadataKey = "foo" | "bar";
 
 enum BillingProducts {
   A = "A",
@@ -62,12 +50,15 @@ describe("EventRecorderProvider", () => {
     );
     const recorder = provider.getRecorder();
 
-    recorder.recordEvent(Feature.FooBar, Action.View);
-    recorder.recordEvent(Feature.BarBaz, Action.Error, {
-      metadata: [
-        [MetadataKey.Foo, 12],
-        [MetadataKey.Baz, 13],
-      ],
+    recorder.recordEvent("fooBar", Action.View);
+    recorder.recordEvent("barBaz", Action.Error, {
+      metadata: {
+        foo: 12,
+        bar: 13,
+        // Disallowed
+        // unknown: 13,
+        // 'alsoKnown': 12,
+      },
     });
 
     // Is buffered
@@ -78,7 +69,7 @@ describe("EventRecorderProvider", () => {
     expect(exporter.getExported().length).toBe(2);
 
     // After close, we still receive events as a fallback, after a brief time
-    recorder.recordEvent(Feature.FooBar, Action.View);
+    recorder.recordEvent("fooBar", Action.View);
     await new Promise((resolve) =>
       setTimeout(() => {
         resolve(expect(exporter.getExported().length).toBe(3));
@@ -106,11 +97,11 @@ describe("EventRecorderProvider", () => {
     const recorder = provider.getRecorder();
 
     // Records should be immediately available
-    recorder.recordEvent(Feature.FooBar, Action.View);
+    recorder.recordEvent("fooBar", Action.View);
     expect(exporter.getExported().length).toBe(1);
-    recorder.recordEvent(Feature.BarBaz, Action.Error, {
+    recorder.recordEvent("barBaz", Action.Error, {
       version: 0,
-      metadata: [[MetadataKey.Foo, 12]],
+      metadata: { foo: 12 },
     });
     expect(exporter.getExported().length).toBe(2);
   });
@@ -144,15 +135,19 @@ describe("EventRecorderProvider", () => {
     );
     const recorder = provider.getRecorder();
 
-    recorder.recordEvent(Feature.FooBar, Action.View);
-    recorder.recordEvent(Feature.BarBaz, Action.Error, {
+    recorder.recordEvent("fooBar", Action.View);
+    recorder.recordEvent("barBaz", Action.Error, {
       version: 0,
-      metadata: [[MetadataKey.Foo, 12]],
+      metadata: { foo: 12 },
       privateMetadata: {},
     });
     provider.complete();
+
     let exported = exporter.getExported();
-    exporter.getExported().forEach((event) => {
+    expect(
+      exported.find((e) => e.feature == "barBaz")?.parameters.metadata
+    ).toEqual([{ key: "foo", value: 12 }]);
+    exported.forEach((event) => {
       expect(event.parameters.billingMetadata).toEqual(billingMetadata);
     });
     // Our custom callback processor works too
@@ -163,7 +158,7 @@ describe("EventRecorderProvider", () => {
       category: BillingCategories.B,
       product: BillingProducts.A,
     };
-    recorder.recordEvent(Feature.FooBar, Action.Error, {
+    recorder.recordEvent("fooBar", Action.Error, {
       version: 0,
       billingMetadata: customBillingMetadata,
     });

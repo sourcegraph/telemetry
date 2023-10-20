@@ -3,7 +3,7 @@ import { bufferTime, catchError, concatMap, takeUntil } from "rxjs/operators";
 
 import { TelemetryExporter } from "./exporters";
 import { TelemetryProcessor } from "./processors";
-import { TelemetryEventInput } from "./api";
+import { TelemetryEventInput, TelemetryEventMetadataInput } from "./api";
 
 /**
  * Make everything available from the top level.
@@ -32,7 +32,15 @@ export interface TelemetryRecorder<
   BillingCategoriesT extends string
 > {
   /**
-   * Record an event.
+   * Record an event. See each type's documentation for more details now event
+   * attributes.
+   *
+   * Recorded events can be exported from the connected Sourcegraph instance to
+   * Sourcegraph's Telemetry Gateway for storage in BigQuery, and are
+   * automatically translated into the event_logs table for reference on the
+   * instance as well.
+   *
+   * To learn more, see https://docs.sourcegraph.com/dev/background-information/telemetry
    */
   recordEvent(
     feature: FeatureT,
@@ -164,14 +172,29 @@ export type TelemetryEventParameters<
    * numeric value. This data is always exported alongside events to
    * Sourcegraph.
    *
-   * Typescript has poor support for excess property checking on objects,
-   * so this is the easiest way to enforce that keys belong to statically
-   * defined enums.
+   * The restriction to only permit numeric data is intentional, as strings
+   * can accidentally contain sensitive data we cannot export by default.
+   * To learn more, see
+   * https://docs.sourcegraph.com/dev/background-information/telemetry#sensitive-attributes.
+   *
+   * To represent categorization metadata using numeric values, try to distill
+   * the value space into a known set, where values can be represented using
+   * a numeric identifier.
    */
-  metadata?: [MetadataKeyT, number][];
+  metadata?: { [key in MetadataKeyT]?: number };
   /**
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
-   * it may contain private instance data.
+   * its arbitrary shape allows for sensitive data we should not export by default.
+   * To record metadata that can be exported by default, use the metadata field.
+   *
+   * Certain scenarios may have agreements allowing us to export non-numeric
+   * metadata, or have safe metadata that cannot be represented as numeric values.
+   * In these scenarios, events may be allowlisted to permit the export of its
+   * privateMetadata - to learn more, see
+   * https://docs.sourcegraph.com/dev/background-information/telemetry#sensitive-attributes.
+   *
+   * Even when not exported, privateMetadata will be retained on-instance in the
+   * event_logs table.
    */
   privateMetadata?: { [key: string]: any };
   /**
@@ -334,9 +357,12 @@ class EventRecorder<
         ? {
             version: parameters.version || 0,
             metadata: parameters.metadata
-              ? parameters.metadata.map((pair) => {
-                  return { key: pair[0], value: pair[1] };
-                })
+              ? Object.entries<number | undefined>(parameters.metadata).map(
+                  ([key, value]): TelemetryEventMetadataInput => ({
+                    key,
+                    value: value || 0,
+                  })
+                )
               : undefined,
             privateMetadata: parameters.privateMetadata,
             billingMetadata: parameters.billingMetadata,

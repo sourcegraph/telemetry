@@ -65,7 +65,7 @@ describe("EventRecorderProvider", () => {
     expect(exporter.getExported().length).toBe(0);
 
     // Buffer is flushed
-    provider.complete();
+    provider.unsubscribe();
     expect(exporter.getExported().length).toBe(2);
 
     // After close, we still receive events as a fallback, after a brief time
@@ -141,7 +141,7 @@ describe("EventRecorderProvider", () => {
       metadata: { foo: 12 },
       privateMetadata: {},
     });
-    provider.complete();
+    provider.unsubscribe();
 
     let exported = exporter.getExported();
     expect(

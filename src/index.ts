@@ -69,7 +69,7 @@ type TelemetryRecordingOptions = {
 };
 
 export const defaultEventRecordingOptions: TelemetryRecordingOptions = {
-  bufferTimeMs: 0,
+  bufferTimeMs: 0, // disabled by default
   bufferMaxSize: 10,
   errorHandler: (error) => {
     console.error("@sourcegraph/telemetry:", error);
@@ -144,11 +144,13 @@ export class TelemetryRecorderProvider<
   }
 
   /**
-   * Complete clears any ongoing work and releases buffer resources. It must be
+   * Clears any ongoing work and releases buffer resources. It must be
    * called when the provider is no longer needed.
+   *
+   * Implements rxjs Unsubscribable.
    */
-  complete(): void {
-    this.submitter.complete();
+  unsubscribe(): void {
+    this.submitter.unsubscribe();
   }
 }
 
@@ -222,8 +224,10 @@ interface TelemetrySubmitter {
   /**
    * Finish any ongoing work and release any resources held, including flushing
    * buffers if one is configured.
+   *
+   * Implements rxjs Unsubscribable.
    */
-  complete(): void;
+  unsubscribe(): void;
 }
 
 class SimpleSubmitter implements TelemetrySubmitter {
@@ -239,7 +243,7 @@ class SimpleSubmitter implements TelemetrySubmitter {
       .then(() => {});
   }
 
-  complete() {}
+  unsubscribe(): void {}
 }
 
 /**
@@ -283,7 +287,7 @@ class BatchSubmitter implements TelemetrySubmitter {
     }
   }
 
-  complete() {
+  unsubscribe(): void {
     // Flush any buffered events
     this.completeEvents.next();
     // Finish work and unsubscribe

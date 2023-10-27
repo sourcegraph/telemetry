@@ -13,6 +13,36 @@ export * from "./processors";
 export * from "./api";
 
 /**
+ * KnownString enforces that:
+ *
+ * - T must be a string
+ * - string must NOT be a T
+ *
+ * This effectively requires T to NOT be an arbitrary string - it must be
+ * a string value known ahead of time.
+ */
+type KnownString<T extends string> = string extends T
+  ? "INPUT TYPE ERROR: string type is too broad, should be a known value"
+  : T;
+
+/**
+ * KnownKeys enforces that:
+ *
+ * - T must be an object with string keys (KeyT) and number values
+ * - an object with arbitary strings as keys must NOT be a T
+ *
+ * This effectively requires KeyT to NOT be an arbitrary string - keys must be
+ * known ahead of time.
+ */
+type KnownKeys<KeyT extends string, T extends { [key in KeyT]: number }> = {
+  [key: string]: number;
+} extends T
+  ? {
+      "INPUT TYPE ERROR: key type is too broad, keys should be known values"?: number;
+    }
+  : T;
+
+/**
  * EventRecorder is the contract Sourcegraph clients to record events for
  * forwarding to Sourcegraph via Telemetry V2. It exposes parameters that are
  * expected to be provided at call sites.
@@ -25,15 +55,18 @@ export * from "./api";
  * type.
  */
 export interface TelemetryRecorder<
-  FeatureT extends string,
-  ActionT extends string,
-  MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
 > {
   /**
-   * Record an event. See each type's documentation for more details now event
-   * attributes.
+   * Record a telemetry event.
+   *
+   * @param feature must be snakeCase and '.'-delimited, e.g. 'myFeature.subFeature'.
+   * Features should NOT include the client platform, e.g. 'vscode' - information
+   * about the client is automatically attached to all events.
+   * @param action must be snakeCase and simple, e.g. 'submit', 'failed', or
+   * 'success', in the context of feature.
+   * @param parameters should be as described in {@link TelemetryEventParameters}.
    *
    * Recorded events can be exported from the connected Sourcegraph instance to
    * Sourcegraph's Telemetry Gateway for storage in BigQuery, and are
@@ -42,11 +75,15 @@ export interface TelemetryRecorder<
    *
    * To learn more, see https://docs.sourcegraph.com/dev/background-information/telemetry
    */
-  recordEvent(
-    feature: FeatureT,
-    action: ActionT,
+  recordEvent<
+    FeatureT extends string,
+    ActionT extends string,
+    MetadataKeyT extends string
+  >(
+    feature: KnownString<FeatureT>,
+    action: KnownString<ActionT>,
     parameters?: TelemetryEventParameters<
-      MetadataKeyT,
+      KnownKeys<MetadataKeyT, { [key in MetadataKeyT]: number }>,
       BillingProductsT,
       BillingCategoriesT
     >
@@ -100,9 +137,6 @@ export type TelemetrySource = {
  * exporter. Additional processors can be stacked on top as well.
  */
 export class TelemetryRecorderProvider<
-  FeatureT extends string,
-  ActionT extends string,
-  MetadataKeyT extends string,
   BillingProductsT extends string,
   BillingCategoriesT extends string
 > {
@@ -127,13 +161,7 @@ export class TelemetryRecorderProvider<
    */
   getRecorder(
     additionalProcessors?: TelemetryProcessor[]
-  ): TelemetryRecorder<
-    FeatureT,
-    ActionT,
-    MetadataKeyT,
-    BillingProductsT,
-    BillingCategoriesT
-  > {
+  ): TelemetryRecorder<BillingProductsT, BillingCategoriesT> {
     return new EventRecorder(
       this.source,
       this.submitter,
@@ -156,11 +184,9 @@ export class TelemetryRecorderProvider<
 
 /**
  * TelemetryEventParameters describes additional, optional parameters for recording events.
- *
- * MetadataKeyT should be an enum string that defines keys for event metadata.
  */
 export type TelemetryEventParameters<
-  MetadataKeyT extends string,
+  MetadataT extends { [key: string]: number },
   BillingProductsT extends string,
   BillingCategoriesT extends string
 > = {
@@ -183,7 +209,7 @@ export type TelemetryEventParameters<
    * the value space into a known set, where values can be represented using
    * a numeric identifier.
    */
-  metadata?: { [key in MetadataKeyT]?: number };
+  metadata?: MetadataT;
   /**
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
    * its arbitrary shape allows for sensitive data we should not export by default.
@@ -302,19 +328,15 @@ class BatchSubmitter implements TelemetrySubmitter {
  * for export.
  */
 class EventRecorder<
-  FeatureT extends string,
-  ActionT extends string,
-  MetadataKeyT extends string,
+  /**
+   * BillingProductsT enumerates known billing product names.
+   */
   BillingProductsT extends string,
+  /**
+   * BillingCategoriesT enumerates known billing category names.
+   */
   BillingCategoriesT extends string
-> implements
-    TelemetryRecorder<
-      FeatureT,
-      ActionT,
-      MetadataKeyT,
-      BillingProductsT,
-      BillingCategoriesT
-    >
+> implements TelemetryRecorder<BillingProductsT, BillingCategoriesT>
 {
   constructor(
     private source: TelemetrySource,
@@ -325,35 +347,20 @@ class EventRecorder<
   /**
    * Record an event.
    */
-  recordEvent(
-    feature: FeatureT,
-    action: ActionT,
+  recordEvent<
+    FeatureT extends string,
+    ActionT extends string,
+    MetadataKeyT extends string
+  >(
+    feature: KnownString<FeatureT>,
+    action: KnownString<ActionT>,
     parameters?: TelemetryEventParameters<
-      MetadataKeyT,
+      KnownKeys<MetadataKeyT, { [key in MetadataKeyT]: number }>,
       BillingProductsT,
       BillingCategoriesT
     >
   ): void {
-    let apiEvent = this.makeAPIEvent(feature, action, parameters);
-    for (const processor of this.processors) {
-      processor.processEvent(apiEvent);
-    }
-    this.submitter.submit(apiEvent);
-  }
-
-  /**
-   * Converts an event record into an Telemetry API event.
-   */
-  private makeAPIEvent(
-    feature: string,
-    action: string,
-    parameters?: TelemetryEventParameters<
-      MetadataKeyT,
-      BillingProductsT,
-      BillingCategoriesT
-    >
-  ): TelemetryEventInput {
-    return {
+    let apiEvent = {
       feature,
       action,
       source: this.source,
@@ -375,5 +382,9 @@ class EventRecorder<
             version: 0,
           },
     };
+    for (const processor of this.processors) {
+      processor.processEvent(apiEvent);
+    }
+    this.submitter.submit(apiEvent);
   }
 }

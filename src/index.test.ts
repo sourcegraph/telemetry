@@ -10,13 +10,6 @@ import {
 
 const telemetrySource: TelemetrySource = { client: "test" };
 
-type Feature = "fooBar" | "barBaz";
-
-enum Action {
-  View = "view",
-  Error = "error",
-}
-
 type MetadataKey = "foo" | "bar";
 
 enum BillingProducts {
@@ -28,12 +21,17 @@ enum BillingCategories {
 }
 
 class ExampleTelemetryProvider extends TelemetryRecorderProvider<
-  Feature,
-  Action,
-  MetadataKey,
   BillingProducts,
   BillingCategories
 > {}
+
+type StringObject = {
+  key: string;
+};
+
+type EnumObject = {
+  key: "foo" | "bar";
+};
 
 describe("EventRecorderProvider", () => {
   test("should buffer events", async () => {
@@ -50,26 +48,45 @@ describe("EventRecorderProvider", () => {
     );
     const recorder = provider.getRecorder();
 
-    recorder.recordEvent("fooBar", Action.View);
-    recorder.recordEvent("barBaz", Action.Error, {
+    // ✅ const string
+    const constString = "asdfasdf";
+    recorder.recordEvent(constString, "view");
+
+    // ❌ variable string
+    const varString: string = "asdf";
+    recorder.recordEvent(varString, "error");
+
+    // ✅ string literals
+    const varMetadataKey: string = "asdf";
+    recorder.recordEvent("foobar", "asdfafsd", {
       metadata: {
         foo: 12,
         bar: 13,
         // Disallowed
-        // unknown: 13,
-        // 'alsoKnown': 12,
+        [varMetadataKey]: 12,
       },
     });
+
+    // ❌ string var
+    recorder.recordEvent("fooBar" as string, "view");
+
+    // ❌ type Object = { key: string };
+    const stringObject: StringObject = { key: "foo" };
+    recorder.recordEvent(stringObject.key, "asdf");
+
+    // ✅ type EnumObject = { key: "foo" | "bar" };
+    const enumObject: EnumObject = { key: "foo" };
+    recorder.recordEvent(enumObject.key, "asdf");
 
     // Is buffered
     expect(exporter.getExported().length).toBe(0);
 
     // Buffer is flushed
     provider.unsubscribe();
-    expect(exporter.getExported().length).toBe(2);
+    expect(exporter.getExported().length).toBe(3);
 
     // After close, we still receive events as a fallback, after a brief time
-    recorder.recordEvent("fooBar", Action.View);
+    recorder.recordEvent("fooBar", "view");
     await new Promise((resolve) =>
       setTimeout(() => {
         resolve(expect(exporter.getExported().length).toBe(3));
@@ -80,8 +97,6 @@ describe("EventRecorderProvider", () => {
   test("can disable buffering of events", () => {
     const exporter = new TestTelemetryExporter();
     const provider = new TelemetryRecorderProvider<
-      Feature,
-      Action,
       MetadataKey,
       BillingProducts,
       BillingCategories
@@ -97,9 +112,9 @@ describe("EventRecorderProvider", () => {
     const recorder = provider.getRecorder();
 
     // Records should be immediately available
-    recorder.recordEvent("fooBar", Action.View);
+    recorder.recordEvent("fooBar", "view");
     expect(exporter.getExported().length).toBe(1);
-    recorder.recordEvent("barBaz", Action.Error, {
+    recorder.recordEvent("barBaz", "error", {
       version: 0,
       metadata: { foo: 12 },
     });
@@ -114,8 +129,6 @@ describe("EventRecorderProvider", () => {
     };
     const processed: TelemetryEventInput[] = [];
     const provider = new TelemetryRecorderProvider<
-      Feature,
-      Action,
       MetadataKey,
       BillingProducts,
       BillingCategories
@@ -135,8 +148,8 @@ describe("EventRecorderProvider", () => {
     );
     const recorder = provider.getRecorder();
 
-    recorder.recordEvent("fooBar", Action.View);
-    recorder.recordEvent("barBaz", Action.Error, {
+    recorder.recordEvent("fooBar", "view");
+    recorder.recordEvent("barBaz", "error", {
       version: 0,
       metadata: { foo: 12 },
       privateMetadata: {},
@@ -158,7 +171,7 @@ describe("EventRecorderProvider", () => {
       category: BillingCategories.B,
       product: BillingProducts.A,
     };
-    recorder.recordEvent("fooBar", Action.Error, {
+    recorder.recordEvent("fooBar", "error", {
       version: 0,
       billingMetadata: customBillingMetadata,
     });

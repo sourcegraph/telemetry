@@ -10,8 +10,6 @@ import {
 
 const telemetrySource: TelemetrySource = { client: "test" };
 
-type MetadataKey = "foo" | "bar";
-
 enum BillingProducts {
   A = "A",
 }
@@ -24,10 +22,6 @@ class ExampleTelemetryProvider extends TelemetryRecorderProvider<
   BillingProducts,
   BillingCategories
 > {}
-
-type StringObject = {
-  key: string;
-};
 
 type EnumObject = {
   key: "foo" | "bar";
@@ -53,26 +47,25 @@ describe("EventRecorderProvider", () => {
     recorder.recordEvent(constString, "view");
 
     // ❌ variable string
-    const varString: string = "asdf";
-    recorder.recordEvent(varString, "error");
+    // const varString: string = "asdf";
+    // recorder.recordEvent(varString, "error");
 
     // ✅ string literals
-    const varMetadataKey: string = "asdf";
     recorder.recordEvent("foobar", "asdfafsd", {
       metadata: {
         foo: 12,
         bar: 13,
         // Disallowed
-        [varMetadataKey]: 12,
+        // ["asdf" as string]: 12,
       },
     });
 
     // ❌ string var
-    recorder.recordEvent("fooBar" as string, "view");
+    // recorder.recordEvent("fooBar" as string, "view");
 
-    // ❌ type Object = { key: string };
-    const stringObject: StringObject = { key: "foo" };
-    recorder.recordEvent(stringObject.key, "asdf");
+    // ❌ type StringObject = { key: string };
+    // const stringObject: StringObject = { key: "foo" };
+    // recorder.recordEvent(stringObject.key, "asdf");
 
     // ✅ type EnumObject = { key: "foo" | "bar" };
     const enumObject: EnumObject = { key: "foo" };
@@ -89,7 +82,7 @@ describe("EventRecorderProvider", () => {
     recorder.recordEvent("fooBar", "view");
     await new Promise((resolve) =>
       setTimeout(() => {
-        resolve(expect(exporter.getExported().length).toBe(3));
+        resolve(expect(exporter.getExported().length).toBe(4));
       }, 5)
     );
   });
@@ -97,7 +90,6 @@ describe("EventRecorderProvider", () => {
   test("can disable buffering of events", () => {
     const exporter = new TestTelemetryExporter();
     const provider = new TelemetryRecorderProvider<
-      MetadataKey,
       BillingProducts,
       BillingCategories
     >(
@@ -129,7 +121,6 @@ describe("EventRecorderProvider", () => {
     };
     const processed: TelemetryEventInput[] = [];
     const provider = new TelemetryRecorderProvider<
-      MetadataKey,
       BillingProducts,
       BillingCategories
     >(

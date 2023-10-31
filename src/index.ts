@@ -13,6 +13,36 @@ export * from "./processors";
 export * from "./api";
 
 /**
+ * KnownString enforces that:
+ *
+ * - T must be a string
+ * - string must NOT be a T
+ *
+ * This effectively requires T to NOT be an arbitrary string - it must be
+ * a string value known ahead of time.
+ */
+type KnownString<Value extends string> = string extends Value
+  ? "INPUT TYPE ERROR: string type is too broad, should be a known value"
+  : Value;
+
+/**
+ * KnownKeys enforces that:
+ *
+ * - Key must be an object with string keys (Key) and number values
+ * - an object with arbitary strings as keys must NOT be a T
+ *
+ * This effectively requires Key to NOT be an arbitrary string - keys must be
+ * known ahead of time.
+ */
+type KnownKeys<Key extends string, T extends { [key in Key]: number }> = {
+  [key: string]: number;
+} extends T
+  ? {
+      "INPUT TYPE ERROR: key type is too broad, keys should be known values"?: number;
+    }
+  : T;
+
+/**
  * EventRecorder is the contract Sourcegraph clients to record events for
  * forwarding to Sourcegraph via Telemetry V2. It exposes parameters that are
  * expected to be provided at call sites.
@@ -25,15 +55,18 @@ export * from "./api";
  * type.
  */
 export interface TelemetryRecorder<
-  FeatureT extends string,
-  ActionT extends string,
-  MetadataKeyT extends string,
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
+  BillingProducts extends string,
+  BillingCategories extends string
 > {
   /**
-   * Record an event. See each type's documentation for more details now event
-   * attributes.
+   * Record a telemetry event.
+   *
+   * @param feature must be snakeCase and '.'-delimited, e.g. 'myFeature.subFeature'.
+   * Features should NOT include the client platform, e.g. 'vscode' - information
+   * about the client is automatically attached to all events.
+   * @param action must be snakeCase and simple, e.g. 'submit', 'failed', or
+   * 'success', in the context of feature.
+   * @param parameters should be as described in {@link TelemetryEventParameters}.
    *
    * Recorded events can be exported from the connected Sourcegraph instance to
    * Sourcegraph's Telemetry Gateway for storage in BigQuery, and are
@@ -42,13 +75,17 @@ export interface TelemetryRecorder<
    *
    * To learn more, see https://docs.sourcegraph.com/dev/background-information/telemetry
    */
-  recordEvent(
-    feature: FeatureT,
-    action: ActionT,
+  recordEvent<
+    Feature extends string,
+    Action extends string,
+    MetadataKey extends string
+  >(
+    feature: KnownString<Feature>,
+    action: KnownString<Action>,
     parameters?: TelemetryEventParameters<
-      MetadataKeyT,
-      BillingProductsT,
-      BillingCategoriesT
+      KnownKeys<MetadataKey, { [key in MetadataKey]: number }>,
+      BillingProducts,
+      BillingCategories
     >
   ): void;
 }
@@ -100,11 +137,8 @@ export type TelemetrySource = {
  * exporter. Additional processors can be stacked on top as well.
  */
 export class TelemetryRecorderProvider<
-  FeatureT extends string,
-  ActionT extends string,
-  MetadataKeyT extends string,
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
+  BillingProducts extends string,
+  BillingCategories extends string
 > {
   private submitter: TelemetrySubmitter;
 
@@ -127,13 +161,7 @@ export class TelemetryRecorderProvider<
    */
   getRecorder(
     additionalProcessors?: TelemetryProcessor[]
-  ): TelemetryRecorder<
-    FeatureT,
-    ActionT,
-    MetadataKeyT,
-    BillingProductsT,
-    BillingCategoriesT
-  > {
+  ): TelemetryRecorder<BillingProducts, BillingCategories> {
     return new EventRecorder(
       this.source,
       this.submitter,
@@ -156,13 +184,11 @@ export class TelemetryRecorderProvider<
 
 /**
  * TelemetryEventParameters describes additional, optional parameters for recording events.
- *
- * MetadataKeyT should be an enum string that defines keys for event metadata.
  */
 export type TelemetryEventParameters<
-  MetadataKeyT extends string,
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
+  Metadata extends { [key: string]: number },
+  BillingProducts extends string,
+  BillingCategories extends string
 > = {
   /**
    * version should indicate the version of the shape of this particular
@@ -183,7 +209,7 @@ export type TelemetryEventParameters<
    * the value space into a known set, where values can be represented using
    * a numeric identifier.
    */
-  metadata?: { [key in MetadataKeyT]?: number };
+  metadata?: Metadata;
   /**
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
    * its arbitrary shape allows for sensitive data we should not export by default.
@@ -207,12 +233,12 @@ export type TelemetryEventParameters<
     /**
      * Billing product ID associated with the event.
      */
-    product: BillingProductsT;
+    product: BillingProducts;
 
     /**
      * Billing category ID the event falls into.
      */
-    category: BillingCategoriesT;
+    category: BillingCategories;
   };
 };
 
@@ -302,19 +328,15 @@ class BatchSubmitter implements TelemetrySubmitter {
  * for export.
  */
 class EventRecorder<
-  FeatureT extends string,
-  ActionT extends string,
-  MetadataKeyT extends string,
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
-> implements
-    TelemetryRecorder<
-      FeatureT,
-      ActionT,
-      MetadataKeyT,
-      BillingProductsT,
-      BillingCategoriesT
-    >
+  /**
+   * BillingProductsT enumerates known billing product names.
+   */
+  BillingProducts extends string,
+  /**
+   * BillingCategoriesT enumerates known billing category names.
+   */
+  BillingCategories extends string
+> implements TelemetryRecorder<BillingProducts, BillingCategories>
 {
   constructor(
     private source: TelemetrySource,
@@ -325,35 +347,20 @@ class EventRecorder<
   /**
    * Record an event.
    */
-  recordEvent(
-    feature: FeatureT,
-    action: ActionT,
+  recordEvent<
+    Feature extends string,
+    Action extends string,
+    MetadataKey extends string
+  >(
+    feature: KnownString<Feature>,
+    action: KnownString<Action>,
     parameters?: TelemetryEventParameters<
-      MetadataKeyT,
-      BillingProductsT,
-      BillingCategoriesT
+      KnownKeys<MetadataKey, { [key in MetadataKey]: number }>,
+      BillingProducts,
+      BillingCategories
     >
   ): void {
-    let apiEvent = this.makeAPIEvent(feature, action, parameters);
-    for (const processor of this.processors) {
-      processor.processEvent(apiEvent);
-    }
-    this.submitter.submit(apiEvent);
-  }
-
-  /**
-   * Converts an event record into an Telemetry API event.
-   */
-  private makeAPIEvent(
-    feature: string,
-    action: string,
-    parameters?: TelemetryEventParameters<
-      MetadataKeyT,
-      BillingProductsT,
-      BillingCategoriesT
-    >
-  ): TelemetryEventInput {
-    return {
+    let apiEvent = {
       feature,
       action,
       source: this.source,
@@ -375,5 +382,9 @@ class EventRecorder<
             version: 0,
           },
     };
+    for (const processor of this.processors) {
+      processor.processEvent(apiEvent);
+    }
+    this.submitter.submit(apiEvent);
   }
 }

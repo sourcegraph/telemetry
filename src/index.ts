@@ -21,20 +21,20 @@ export * from "./api";
  * This effectively requires T to NOT be an arbitrary string - it must be
  * a string value known ahead of time.
  */
-type KnownString<T extends string> = string extends T
+type KnownString<Value extends string> = string extends Value
   ? "INPUT TYPE ERROR: string type is too broad, should be a known value"
-  : T;
+  : Value;
 
 /**
  * KnownKeys enforces that:
  *
- * - T must be an object with string keys (KeyT) and number values
+ * - Key must be an object with string keys (Key) and number values
  * - an object with arbitary strings as keys must NOT be a T
  *
- * This effectively requires KeyT to NOT be an arbitrary string - keys must be
+ * This effectively requires Key to NOT be an arbitrary string - keys must be
  * known ahead of time.
  */
-type KnownKeys<KeyT extends string, T extends { [key in KeyT]: number }> = {
+type KnownKeys<Key extends string, T extends { [key in Key]: number }> = {
   [key: string]: number;
 } extends T
   ? {
@@ -55,8 +55,8 @@ type KnownKeys<KeyT extends string, T extends { [key in KeyT]: number }> = {
  * type.
  */
 export interface TelemetryRecorder<
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
+  BillingProducts extends string,
+  BillingCategories extends string
 > {
   /**
    * Record a telemetry event.
@@ -76,16 +76,16 @@ export interface TelemetryRecorder<
    * To learn more, see https://docs.sourcegraph.com/dev/background-information/telemetry
    */
   recordEvent<
-    FeatureT extends string,
-    ActionT extends string,
-    MetadataKeyT extends string
+    Feature extends string,
+    Action extends string,
+    MetadataKey extends string
   >(
-    feature: KnownString<FeatureT>,
-    action: KnownString<ActionT>,
+    feature: KnownString<Feature>,
+    action: KnownString<Action>,
     parameters?: TelemetryEventParameters<
-      KnownKeys<MetadataKeyT, { [key in MetadataKeyT]: number }>,
-      BillingProductsT,
-      BillingCategoriesT
+      KnownKeys<MetadataKey, { [key in MetadataKey]: number }>,
+      BillingProducts,
+      BillingCategories
     >
   ): void;
 }
@@ -137,8 +137,8 @@ export type TelemetrySource = {
  * exporter. Additional processors can be stacked on top as well.
  */
 export class TelemetryRecorderProvider<
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
+  BillingProducts extends string,
+  BillingCategories extends string
 > {
   private submitter: TelemetrySubmitter;
 
@@ -161,7 +161,7 @@ export class TelemetryRecorderProvider<
    */
   getRecorder(
     additionalProcessors?: TelemetryProcessor[]
-  ): TelemetryRecorder<BillingProductsT, BillingCategoriesT> {
+  ): TelemetryRecorder<BillingProducts, BillingCategories> {
     return new EventRecorder(
       this.source,
       this.submitter,
@@ -186,9 +186,9 @@ export class TelemetryRecorderProvider<
  * TelemetryEventParameters describes additional, optional parameters for recording events.
  */
 export type TelemetryEventParameters<
-  MetadataT extends { [key: string]: number },
-  BillingProductsT extends string,
-  BillingCategoriesT extends string
+  Metadata extends { [key: string]: number },
+  BillingProducts extends string,
+  BillingCategories extends string
 > = {
   /**
    * version should indicate the version of the shape of this particular
@@ -209,7 +209,7 @@ export type TelemetryEventParameters<
    * the value space into a known set, where values can be represented using
    * a numeric identifier.
    */
-  metadata?: MetadataT;
+  metadata?: Metadata;
   /**
    * privateMetadata is an arbitrary value. This is NOT exported by default, as
    * its arbitrary shape allows for sensitive data we should not export by default.
@@ -233,12 +233,12 @@ export type TelemetryEventParameters<
     /**
      * Billing product ID associated with the event.
      */
-    product: BillingProductsT;
+    product: BillingProducts;
 
     /**
      * Billing category ID the event falls into.
      */
-    category: BillingCategoriesT;
+    category: BillingCategories;
   };
 };
 
@@ -331,12 +331,12 @@ class EventRecorder<
   /**
    * BillingProductsT enumerates known billing product names.
    */
-  BillingProductsT extends string,
+  BillingProducts extends string,
   /**
    * BillingCategoriesT enumerates known billing category names.
    */
-  BillingCategoriesT extends string
-> implements TelemetryRecorder<BillingProductsT, BillingCategoriesT>
+  BillingCategories extends string
+> implements TelemetryRecorder<BillingProducts, BillingCategories>
 {
   constructor(
     private source: TelemetrySource,
@@ -348,16 +348,16 @@ class EventRecorder<
    * Record an event.
    */
   recordEvent<
-    FeatureT extends string,
-    ActionT extends string,
-    MetadataKeyT extends string
+    Feature extends string,
+    Action extends string,
+    MetadataKey extends string
   >(
-    feature: KnownString<FeatureT>,
-    action: KnownString<ActionT>,
+    feature: KnownString<Feature>,
+    action: KnownString<Action>,
     parameters?: TelemetryEventParameters<
-      KnownKeys<MetadataKeyT, { [key in MetadataKeyT]: number }>,
-      BillingProductsT,
-      BillingCategoriesT
+      KnownKeys<MetadataKey, { [key in MetadataKey]: number }>,
+      BillingProducts,
+      BillingCategories
     >
   ): void {
     let apiEvent = {

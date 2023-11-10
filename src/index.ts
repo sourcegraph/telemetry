@@ -21,7 +21,7 @@ export * from "./api";
  * This effectively requires T to NOT be an arbitrary string - it must be
  * a string value known ahead of time.
  */
-type KnownString<Value extends string> = string extends Value
+export type KnownString<Value extends string> = string extends Value
   ? "INPUT TYPE ERROR: string type is too broad, should be a known value"
   : Value;
 
@@ -34,7 +34,10 @@ type KnownString<Value extends string> = string extends Value
  * This effectively requires Key to NOT be an arbitrary string - keys must be
  * known ahead of time.
  */
-type KnownKeys<Key extends string, T extends { [key in Key]: number }> = {
+export type KnownKeys<
+  Key extends string,
+  T extends { [key in Key]: number }
+> = {
   [key: string]: number;
 } extends T
   ? {

@@ -66,7 +66,9 @@ export interface TelemetryRecorder<
    *
    * @param feature must be camelCase and '.'-delimited, e.g. 'myFeature.subFeature'.
    * Features should NOT include the client platform, e.g. 'vscode' - information
-   * about the client is automatically attached to all events.
+   * about the client is automatically attached to all events. Note that Cody
+   * events MUST have provide feature 'cody' or have a feature prefixed with
+   * 'cody.' to be considered Cody events.
    * @param action must be camelCase and simple, e.g. 'submit', 'failed', or
    * 'success', in the context of feature.
    * @param parameters should be as described in {@link TelemetryEventParameters}.

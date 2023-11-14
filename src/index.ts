@@ -64,10 +64,10 @@ export interface TelemetryRecorder<
   /**
    * Record a telemetry event.
    *
-   * @param feature must be snakeCase and '.'-delimited, e.g. 'myFeature.subFeature'.
+   * @param feature must be camelCase and '.'-delimited, e.g. 'myFeature.subFeature'.
    * Features should NOT include the client platform, e.g. 'vscode' - information
    * about the client is automatically attached to all events.
-   * @param action must be snakeCase and simple, e.g. 'submit', 'failed', or
+   * @param action must be camelCase and simple, e.g. 'submit', 'failed', or
    * 'success', in the context of feature.
    * @param parameters should be as described in {@link TelemetryEventParameters}.
    *

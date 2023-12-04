@@ -170,4 +170,28 @@ describe("EventRecorderProvider", () => {
       customBillingMetadata
     );
   });
+
+  test("interaction ID", () => {
+    const exporter = new TestTelemetryExporter();
+    const provider = new TelemetryRecorderProvider<
+      BillingProducts,
+      BillingCategories
+    >(
+      telemetrySource,
+      exporter,
+      undefined, // no processors
+      {
+        ...defaultEventRecordingOptions,
+        bufferTimeMs: 0, // disable buffering
+      }
+    );
+    const recorder = provider.getRecorder();
+
+    // Records should be immediately available
+    recorder.recordEvent("fooBar", "view", {
+      interactionID: "abcde",
+    });
+    expect(exporter.getExported().length).toBe(1);
+    expect(exporter.getExported()[0].parameters.interactionID).toEqual("abcde");
+  });
 });

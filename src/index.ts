@@ -201,6 +201,12 @@ export type TelemetryEventParameters<
    */
   version?: number;
   /**
+   * interactionID can be used to multiple events together as under a single
+   * interaction. It can also be set using the X-Sourcegraph-Interaction-ID
+   * request header on all interactions with the Sourcegraph backend.
+   */
+  interactionID?: string;
+  /**
    * metadata is array of tuples with predefined keys and arbitrary
    * numeric value. This data is always exported alongside events to
    * Sourcegraph.
@@ -365,13 +371,14 @@ class EventRecorder<
       BillingCategories
     >
   ): void {
-    let apiEvent = {
+    const apiEvent: TelemetryEventInput = {
       feature,
       action,
       source: this.source,
       parameters: parameters
         ? {
             version: parameters.version || 0,
+            interactionID: parameters.interactionID,
             metadata: parameters.metadata
               ? Object.entries<number | undefined>(parameters.metadata).map(
                   ([key, value]): TelemetryEventMetadataInput => ({

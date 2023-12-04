@@ -57,7 +57,12 @@ export type TelemetryEventInput = {
    * left as a string in the API to allow some flexibility.
    */
   feature: Scalars['String']['input'];
-  /** Optional marketing campaign tracking parameters. */
+  /**
+   * Optional marketing campaign tracking parameters.
+   *
+   * 🚨 SECURITY: This metadata is NEVER exported from private Sourcegraph instances,
+   * and is only exported for events tracked in the public Sourcegraph.com instance.
+   */
   marketingTracking?: InputMaybe<TelemetryEventMarketingTrackingInput>;
   /** Parameters of the event. */
   parameters: TelemetryEventParametersInput;
@@ -68,7 +73,8 @@ export type TelemetryEventInput = {
 /**
  * Marketing campaign tracking parameters for a telemetry V2 event.
  *
- * By default, this metadata is assumed to be unsafe for export from an instance.
+ * 🚨 SECURITY: This metadata is NEVER exported from private Sourcegraph instances,
+ * and is only exported for events tracked in the public Sourcegraph.com instance.
  */
 export type TelemetryEventMarketingTrackingInput = {
   /** Cohort ID to identify the user as part of a specific A/B test. */
@@ -89,17 +95,42 @@ export type TelemetryEventMarketingTrackingInput = {
   url?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** A single, PII-free metadata item for telemetry V2 events. */
+export type TelemetryEventMetadataInput = {
+  /** The key identifying this metadata entry. */
+  key: Scalars['String']['input'];
+  /**
+   * Numeric value associated with the key. Enforcing numeric values eliminates
+   * risks of accidentally shipping sensitive or private data.
+   *
+   * The value type in the schema is JSONValue for flexibility, but we ONLY
+   * accept numeric values (integers and floats) - any other value will be
+   * rejected.
+   */
+  value: Scalars['JSONValue']['input'];
+};
+
 /** Properties of a telemetry V2 event. */
 export type TelemetryEventParametersInput = {
   /** Billing-related metadata. */
   billingMetadata?: InputMaybe<TelemetryEventBillingMetadataInput>;
+  /**
+   * Optional interaction ID that can be provided to indicate the interaction
+   * this event belongs to. It overrides the X-Sourcegraph-Interaction-ID header
+   * if one is set on the request recording the event.
+   *
+   * This parameter is only available in Sourcegraph 5.2.4 and later.
+   */
+  interactionID?: InputMaybe<Scalars['String']['input']>;
   /** Strictly typed metadata that must not contain any sensitive data or PII. */
   metadata?: InputMaybe<Array<TelemetryEventMetadataInput>>;
   /**
    * Private metadata in JSON format. Unlike metadata, values can be of any type,
    * not just numeric.
    *
-   * By default, this metadata is assumed to be unsafe for export from an instance.
+   * 🚨 SECURITY: This metadata is NOT exported from instances by default, as it
+   * can contain arbitrarily-shaped data that may accidentally contain sensitive
+   * or private contents.
    */
   privateMetadata?: InputMaybe<Scalars['JSONValue']['input']>;
   /**
@@ -109,24 +140,9 @@ export type TelemetryEventParametersInput = {
   version: Scalars['Int']['input'];
 };
 
-/** A single, PII-free metadata item for telemetry V2 events. */
-export type TelemetryEventMetadataInput = {
-  /**
-   * Metadata keys must come from a static set of predefined metadata keys in
-   * libraries - it is left as a string in the API to allow some flexibility.
-   */
-  key: Scalars['String']['input'];
-  /** Numeric value associated with the key. */
-  value: Scalars['Int']['input'];
-};
-
 /** Properties comprising the source of a telemetry V2 event reported by a client. */
 export type TelemetryEventSourceInput = {
-  /**
-   * Source client of the event. Clients must come from a static set of predefined
-   * metadata keys in libraries - it is left as a string in the API to allow some
-   * backwards/forwards flexibility.
-   */
+  /** Source client of the event. */
   client: Scalars['String']['input'];
   /** Version of the source client of the event. */
   clientVersion?: InputMaybe<Scalars['String']['input']>;

@@ -204,6 +204,8 @@ export type TelemetryEventParameters<
    * interactionID can be used to multiple events together as under a single
    * interaction. It can also be set using the X-Sourcegraph-Interaction-ID
    * request header on all interactions with the Sourcegraph backend.
+   *
+   * Supported in Sourcegraph 5.2.4 and later.
    */
   interactionID?: string;
   /**
@@ -219,6 +221,8 @@ export type TelemetryEventParameters<
    * To represent categorization metadata using numeric values, try to distill
    * the value space into a known set, where values can be represented using
    * a numeric identifier.
+   *
+   * Float values are only supported in Sourcegraph 5.2.4 and later.
    */
   metadata?: Metadata;
   /**
@@ -234,6 +238,8 @@ export type TelemetryEventParameters<
    *
    * Even when not exported, privateMetadata will be retained on-instance in the
    * event_logs table.
+   *
+   * Supported in Sourcegraph 5.2.2 and later.
    */
   privateMetadata?: { [key: string]: any };
   /**

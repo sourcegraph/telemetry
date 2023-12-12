@@ -386,7 +386,7 @@ class EventRecorder<
             version: parameters.version || 0,
             interactionID: parameters.interactionID,
             metadata: parameters.metadata
-              ? Object.entries<number | undefined>(parameters.metadata).map(
+              ? Object.entries(parameters.metadata).map(
                   ([key, value]): TelemetryEventMetadataInput => ({
                     key,
                     value: value || 0,

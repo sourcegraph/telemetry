@@ -12,3 +12,10 @@ type EmptyResponse {
 A valid JSON value.
 """
 scalar JSONValue
+
+"""
+An RFC 3339-encoded UTC date string, such as 1973-11-29T21:33:09Z. This value can be parsed into a
+JavaScript Date using Date.parse. To produce this value from a JavaScript Date instance, use
+Date#toISOString.
+"""
+scalar DateTime

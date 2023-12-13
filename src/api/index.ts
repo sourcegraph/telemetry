@@ -12,6 +12,12 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /**
+   * An RFC 3339-encoded UTC date string, such as 1973-11-29T21:33:09Z. This value can be parsed into a
+   * JavaScript Date using Date.parse. To produce this value from a JavaScript Date instance, use
+   * Date#toISOString.
+   */
+  DateTime: { input: any; output: any; }
   /** A valid JSON value. */
   JSONValue: { input: any; output: any; }
 };
@@ -68,6 +74,14 @@ export type TelemetryEventInput = {
   parameters: TelemetryEventParametersInput;
   /** Information about where this event came from. */
   source: TelemetryEventSourceInput;
+  /**
+   * Timestamp at which the time was recorded. If not provided, a timestamp is
+   * generated when the server receives the event, but this does not guarantee
+   * consistent ordering or accuracy.
+   *
+   * This parameter is only available in Sourcegraph 5.2.5 and later.
+   */
+  timestamp?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 /**
@@ -146,4 +160,22 @@ export type TelemetryEventSourceInput = {
   client: Scalars['String']['input'];
   /** Version of the source client of the event. */
   clientVersion?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Mutations for recording events from clients. */
+export type TelemetryMutation = {
+  __typename?: 'TelemetryMutation';
+  /**
+   * Record a batch of telemetry events.
+   *
+   * ❗ Do not use this directly when recording events in-product - use the
+   * @sourcegraph/telemetry package, or equivalent, instead.
+   */
+  recordEvents?: Maybe<EmptyResponse>;
+};
+
+
+/** Mutations for recording events from clients. */
+export type TelemetryMutationRecordEventsArgs = {
+  events: Array<TelemetryEventInput>;
 };

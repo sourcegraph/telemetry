@@ -145,7 +145,7 @@ export class TelemetryRecorderProvider<
   BillingProducts extends string,
   BillingCategories extends string
 > {
-  private submitter: TelemetrySubmitter;
+  private readonly submitter: TelemetrySubmitter;
 
   constructor(
     private source: TelemetrySource,
@@ -304,10 +304,10 @@ class BatchSubmitter implements TelemetrySubmitter {
       .pipe(
         takeUntil(this.completeEvents),
         bufferTime(options.bufferTimeMs, null, options.bufferMaxSize),
-        concatMap((events) =>
+        concatMap((events: TelemetryEventInput[]) =>
           events.length > 0 ? exporter.exportEvents(events) : EMPTY
         ),
-        catchError((error) => {
+        catchError((error: any) => {
           options.errorHandler(error);
           return [];
         })

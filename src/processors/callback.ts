@@ -1,4 +1,4 @@
-import { TelemetryProcessor } from "../processors";
+import { TelemetryProcessor } from '.';
 import { TelemetryEventInput } from "../api";
 
 /**

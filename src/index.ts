@@ -29,7 +29,7 @@ export type KnownString<Value extends string> = string extends Value
  * KnownKeys enforces that:
  *
  * - Key must be an object with string keys (Key) and number values
- * - an object with arbitary strings as keys must NOT be a T
+ * - an object with arbitrary strings as keys must NOT be a T
  *
  * This effectively requires Key to NOT be an arbitrary string - keys must be
  * known ahead of time.
@@ -67,7 +67,7 @@ export interface TelemetryRecorder<
    * @param feature must be camelCase and '.'-delimited, e.g. 'myFeature.subFeature'.
    * Features should NOT include the client platform, e.g. 'vscode' - information
    * about the client is automatically attached to all events. Note that Cody
-   * events MUST have provide feature 'cody' or have a feature prefixed with
+   * events MUST provide the feature 'cody' or have a feature prefixed with
    * 'cody.' to be considered Cody events.
    * @param action must be camelCase and simple, e.g. 'submit', 'failed', or
    * 'success', in the context of feature.
@@ -138,7 +138,7 @@ export type TelemetrySource = {
  * EventRecorderProvider is a factory for EventRecorder instances with a default
  * exporter and set of processors.
  *
- * getRecorder can be used to retrive recorder instances backed by the same
+ * getRecorder can be used to retrieve recorder instances backed by the same
  * exporter. Additional processors can be stacked on top as well.
  */
 export class TelemetryRecorderProvider<

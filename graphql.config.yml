@@ -1,0 +1,2 @@
+# Tells tooling where to find the schema files
+schema: schema/*.graphql

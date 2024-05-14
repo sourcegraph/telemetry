@@ -5,6 +5,8 @@ import { TelemetryExporter } from "./exporters";
 import { TelemetryProcessor } from "./processors";
 import { TelemetryEventInput, TelemetryEventMetadataInput } from "./api";
 
+import { validateEventFeatureAction } from "./validate";
+
 /**
  * Make everything available from the top level.
  */
@@ -377,6 +379,10 @@ class EventRecorder<
       BillingCategories
     >
   ): void {
+    // Validate the feature and action - this will throw an error if the input
+    // is invalid
+    validateEventFeatureAction(feature, action);
+
     const apiEvent: TelemetryEventInput = {
       feature,
       action,

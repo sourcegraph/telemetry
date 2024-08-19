@@ -1,6 +1,6 @@
 {
   "name": "@sourcegraph/telemetry",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Sourcegraph client telemetry v2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,18 +8,15 @@
     "type": "git",
     "url": "git+https://github.com/sourcegraph/telemetry.git"
   },
-  "dependencies": {
-    "rxjs": "^7.8.1"
-  },
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
     "@sourcegraph/tsconfig": "^4.0.1",
     "@types/jest": "^29.5.4",
     "jest": "^29.6.4",
     "ts-jest": "^29.1.1",
     "typescript": "^4.5.5",
-    "typescript-common": "^1.0.5-beta",
-    "@graphql-codegen/cli": "^5.0.0",
-    "@graphql-codegen/typescript": "^4.0.1"
+    "typescript-common": "^1.0.5-beta"
   },
   "scripts": {
     "test": "jest",

@@ -1,18 +1,14 @@
-import { EMPTY, Subject } from "rxjs";
-import { bufferTime, catchError, concatMap, takeUntil } from "rxjs/operators";
-
+import { TelemetryEventInput, TelemetryEventMetadataInput } from "./api";
 import { TelemetryExporter } from "./exporters";
 import { TelemetryProcessor } from "./processors";
-import { TelemetryEventInput, TelemetryEventMetadataInput } from "./api";
-
 import { validateEventFeatureAction } from "./validate";
 
 /**
  * Make everything available from the top level.
  */
+export * from "./api";
 export * from "./exporters";
 export * from "./processors";
-export * from "./api";
 
 /**
  * KnownString enforces that:
@@ -181,8 +177,6 @@ export class TelemetryRecorderProvider<
   /**
    * Clears any ongoing work and releases buffer resources. It must be
    * called when the provider is no longer needed.
-   *
-   * Implements rxjs Unsubscribable.
    */
   unsubscribe(): void {
     this.submitter.unsubscribe();
@@ -269,8 +263,6 @@ interface TelemetrySubmitter {
   /**
    * Finish any ongoing work and release any resources held, including flushing
    * buffers if one is configured.
-   *
-   * Implements rxjs Unsubscribable.
    */
   unsubscribe(): void;
 }
@@ -295,31 +287,38 @@ class SimpleSubmitter implements TelemetrySubmitter {
  * BatchSubmitter buffer events into batches for export.
  */
 class BatchSubmitter implements TelemetrySubmitter {
-  private events = new Subject<TelemetryEventInput>();
-  private completeEvents = new Subject<void>();
+  private events: TelemetryEventInput[] = [];
+  private timer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private exporter: TelemetryExporter,
     private options: TelemetryRecordingOptions
   ) {
-    this.events
-      .pipe(
-        takeUntil(this.completeEvents),
-        bufferTime(options.bufferTimeMs, null, options.bufferMaxSize),
-        concatMap((events: TelemetryEventInput[]) =>
-          events.length > 0 ? exporter.exportEvents(events) : EMPTY
-        ),
-        catchError((error: any) => {
-          options.errorHandler(error);
-          return [];
-        })
-      )
-      .subscribe();
+    this.startTimer();
+  }
+
+  private startTimer() {
+    this.timer = setInterval(() => {
+      this.flushEvents();
+    }, this.options.bufferTimeMs);
+  }
+
+  private flushEvents() {
+    if (this.events.length > 0) {
+      const eventsToExport = this.events.splice(0, this.options.bufferMaxSize);
+      this.exporter.exportEvents(eventsToExport)
+        .catch((error: any) => {
+          this.options.errorHandler(error);
+        });
+    }
   }
 
   submit(event: TelemetryEventInput) {
-    if (!this.events.closed) {
-      this.events.next(event);
+    if (this.timer !== null) {
+      this.events.push(event);
+      if (this.events.length >= this.options.bufferMaxSize) {
+        this.flushEvents();
+      }
     } else {
       // Best-effort attempt to export after events are closed. We log an error
       // after succeeding to indicate something probably isn't implemented right.
@@ -333,11 +332,11 @@ class BatchSubmitter implements TelemetrySubmitter {
   }
 
   unsubscribe(): void {
-    // Flush any buffered events
-    this.completeEvents.next();
-    // Finish work and unsubscribe
-    this.events.complete();
-    this.events.unsubscribe();
+    this.flushEvents();
+    if (this.timer !== null) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   }
 }
 

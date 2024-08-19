@@ -1,5 +1,5 @@
-import { TelemetryEventInput } from "../api";
-import { TelemetryProcessor } from ".";
+import type { TelemetryProcessor } from ".";
+import type { TelemetryEventInput } from "../api";
 
 export interface TimestampProvider {
   /**

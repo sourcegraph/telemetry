@@ -20,9 +20,8 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "tsc",
-    "prepublish": "yarn build",
-    "prepack": "yarn prepublish",
+    "build": "tsc -b --clean && tsc -b",
+    "prepublish": "pnpm build",
     "generate": "npx graphql-codegen --config graphql-codegen.yml"
   },
   "author": "",

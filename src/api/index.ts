@@ -95,10 +95,16 @@ export type TelemetryEventMarketingTrackingInput = {
   cohortID?: InputMaybe<Scalars['String']['input']>;
   /** Device session ID to identify the user's session. */
   deviceSessionID?: InputMaybe<Scalars['String']['input']>;
+  /** First URL the user visited in their current session. */
+  firstPageSeenURL?: InputMaybe<Scalars['String']['input']>;
   /** Initial URL the user landed on. */
   firstSourceURL?: InputMaybe<Scalars['String']['input']>;
+  /** URL the user last visited, in their current session. */
+  lastPageSeenURL?: InputMaybe<Scalars['String']['input']>;
   /** Last source URL visited by the user. */
   lastSourceURL?: InputMaybe<Scalars['String']['input']>;
+  /** Most recent referrer URL, in their current session. */
+  mostRecentReferrerURL?: InputMaybe<Scalars['String']['input']>;
   /** Referrer URL that refers the user to Sourcegraph. */
   referrer?: InputMaybe<Scalars['String']['input']>;
   /** First URL the user visited in their current session. */
@@ -107,6 +113,16 @@ export type TelemetryEventMarketingTrackingInput = {
   sessionReferrer?: InputMaybe<Scalars['String']['input']>;
   /** URL the event occurred on. */
   url?: InputMaybe<Scalars['String']['input']>;
+  /** UTM campaign tracking parameters, in their current session. */
+  utmCampaign?: InputMaybe<Scalars['String']['input']>;
+  /** UTM content tracking parameters, in their current session. */
+  utmContent?: InputMaybe<Scalars['String']['input']>;
+  /** UTM medium tracking parameters, in their current session. */
+  utmMedium?: InputMaybe<Scalars['String']['input']>;
+  /** UTM source tracking parameters, in their current session. */
+  utmSource?: InputMaybe<Scalars['String']['input']>;
+  /** UTM term tracking parameters, in their current session. */
+  utmTerm?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** A single, PII-free metadata item for telemetry V2 events. */

@@ -187,4 +187,36 @@ input TelemetryEventMarketingTrackingInput {
   First URL the user visited in their current session.
   """
   sessionFirstURL: String
+  """
+  URL the user last visited, in their current session.
+  """
+  lastPageSeenURL: String
+  """
+  Most recent referrer URL, in their current session.
+  """
+  mostRecentReferrerURL: String
+  """
+  First URL the user visited in their current session.
+  """
+  firstPageSeenURL: String
+  """
+  UTM campaign tracking parameters, in their current session.
+  """
+  utmCampaign: String
+  """
+  UTM content tracking parameters, in their current session.
+  """
+  utmContent: String
+  """
+  UTM medium tracking parameters, in their current session.
+  """
+  utmMedium: String
+  """
+  UTM source tracking parameters, in their current session.
+  """
+  utmSource: String
+  """
+  UTM term tracking parameters, in their current session.
+  """
+  utmTerm: String
 }

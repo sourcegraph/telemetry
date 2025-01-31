@@ -1,0 +1,109 @@
+<!--
+ The following standalone client script is used on the Webflow-based about.sourcegraph.com
+ website, because Webflow sites can't load npm packages.
+
+ Last updated: 2024-01-30
+-->
+
+<!-- Load js-cookie library for telemetry. See https://github.com/js-cookie/js-cookie -->
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+
+<!-- Internal Sourcegraph v2 telemetry export -->
+<script>
+    /**
+    * Record a telemetry event to Sourcegraph.com.
+    */
+    function logEvent(feature, action, privateMetadata = {}) {
+        privateMetadata.path = window.location.pathname
+        const event = {
+            feature,
+            action,
+            source: {
+                client: 'about.web',
+                clientVersion: '2.0 (Webflow)',
+            },
+            timestamp: new Date(Date.now()).toISOString(),
+            parameters: {
+                version: 0,
+                privateMetadata,
+            },
+            marketingTracking: {
+                url: window.location.href,
+            },
+        }
+
+        fetch('https://sourcegraph.com/.api/graphql?ExportTelemetryEventsFromMarketingHome', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            body: JSON.stringify({
+                query: `
+                    mutation ExportTelemetryEventsFromAbout($events: [TelemetryEventInput!]!) {
+                        telemetry {
+                            recordEvents(events: $events) {
+                                alwaysNil
+                            }
+                        }
+                    }`,
+                variables: { events: [event] },
+            }),
+        }).catch(() => {
+            // Swallow errors.
+        })
+    }
+
+    /**
+    * Log page view events.
+    */
+    window.addEventListener('load', () => {    
+        logEvent('aboutPage', 'view')
+    })
+
+    /**
+    * Log form submissions.
+    */
+    document.addEventListener('submit', () => {
+        logEvent('aboutPage.form', 'submit')
+    })
+
+    /**
+    * Log button and link clicks.
+    */
+    document.addEventListener('click', (event) => {
+        if (event.target.tagName === 'A') {
+            logEvent('aboutPage.link', 'click', { text: event.target.textContent })
+        }
+        if (event.target.tagName === 'BUTTON') {
+            logEvent('aboutPage.button', 'click', { text: event.target.textContent })
+        }
+    })
+
+    const ANONYMOUS_USER_ID_KEY = 'sourcegraphAnonymousUid'
+
+    /**
+    * Gets the anonymous user ID of the user from cookies.
+    * If user doesn't have an anonymous user ID yet, a new one is generated.
+    */
+    let anonymousUserID = Cookies.get(ANONYMOUS_USER_ID_KEY)
+    if (!anonymousUserID) {
+        anonymousUserID = crypto.randomUUID()
+    }
+
+    Cookies.set(ANONYMOUS_USER_ID_KEY, anonymousUserID, {
+        // 365 days expiry, but renewed on activity.
+        expires: 365,
+        // Enforce HTTPS
+        secure: true,
+        // We only read the cookie with JS so we don't need to send it cross-site nor on initial page requests.
+        // However, we do need it on page redirects when users sign up via OAuth, hence using the Lax policy.
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+        sameSite: 'Lax',
+        // Specify the Domain attribute to ensure subdomains (sourcegraph.com) can receive this cookie.
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        domain: window.location.hostname,
+    })
+</script>
